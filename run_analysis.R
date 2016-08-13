@@ -1,9 +1,9 @@
 run_analysis <- function() {
   
+  ## Load required libraries
   require(dplyr)
   
-  ## Determine if data subdirectory exists in working directory
-  ## If not, then create data subdirectory
+  ## Determine if data subdirectory exists in working directory, create if not
   if (!file.exists("data")) {dir.create("data")}
     
   ## Set download URL and download zip file
@@ -51,17 +51,15 @@ run_analysis <- function() {
   colnames(totalData)[1] <- "subject"
   colnames(totalData)[2] <- "activity"
   
-  ## Select three identifying columns and all mean or std data, discard remainder 
-  ## There has to be a better way to do this.
+  ## Select identifying columns and all mean or std data 
+  ## (excluding meanFreq as not specifically a mean() calc)
   cat("Cleaning up unneeded columns...", "\n")
   colKeep <- grep('mean\\(|std\\(', as.character(features[,2])) +2
   slimData <- totalData[, c(1,2,colKeep)]
   
-  ## Clean up variable names (go lowercase and remove symbols)
+  ## Clean up variable names
   cat("Giving variables better names...", "\n")
-  names(slimData) <- tolower(names(slimData))
-  names(slimData) <- gsub("-","", names(slimData))
-  names(slimData) <- gsub("\\(\\)","", names(slimData))
+  names(slimData) <- names(slimData) %>% tolower %>% gsub("-","",.) %>% gsub("\\(\\)","", .) %>% gsub("^t","time", .) %>% gsub("^f","freq", .) %>% gsub("acc","accelerator", .) %>% gsub("gyro","gyrometer", .)
   
   ## Replace activity codes with activity description
   cat("Replacing activity codes with descriptions...", "\n")
@@ -74,10 +72,11 @@ run_analysis <- function() {
   ## Group by activity and show mean of measurement variables
   cat("Creating final data frame...", "\n")
   finalData <- slimData
-  byActivity <- finalData %>% group_by(activity) %>% summarise_each(funs(mean)) %>% mutate(subject = NA)
-  bySubject <- finalData %>% group_by(subject) %>% summarise_each(funs(mean))
+  byActivity <- finalData %>% group_by(activity) %>% summarise_each(funs(mean)) %>% mutate(subject = "(all)")
+  bySubject <- finalData %>% group_by(subject) %>% summarise_each(funs(mean)) %>% mutate(activity = "(all)")
   bySubject = bySubject[, c(2,1,3:ncol(bySubject))] # Swaps first two columns to match byActivity
   finalSet <- rbind(byActivity,bySubject)  #Binds the two sets together
-  write.csv(finalSet, file="finalanswer.csv", row.names = FALSE)
-  cat("Done! See finalanswer.csv for your output file.")
+  write.table(finalSet, file="tidydata.txt", sep=" ")
+  write.csv(finalSet, file="tidydata.csv", row.names=FALSE)
+  cat("Done! See tidydata.txt or tidydata.csv in your working directory for your output file.")
 }
