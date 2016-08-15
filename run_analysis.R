@@ -2,6 +2,7 @@ run_analysis <- function() {
   
   ## Load required libraries
   require(dplyr)
+  require(data.table)
   
   ## Determine if data subdirectory exists in working directory, create if not
   if (!file.exists("data")) {dir.create("data")}
@@ -69,14 +70,10 @@ run_analysis <- function() {
   cat("Data set officially tidy! Not long now...", "\n")
   ## THIS DATA SET IS NOW TIDY!!!!!
   
-  ## Group by activity and show mean of measurement variables
+  ## Group by subject and activity and show mean of measurement variables
   cat("Creating final data frame...", "\n")
   finalData <- slimData
-  byActivity <- finalData %>% group_by(activity) %>% summarise_each(funs(mean)) %>% mutate(subject = "(all)")
-  bySubject <- finalData %>% group_by(subject) %>% summarise_each(funs(mean)) %>% mutate(activity = "(all)")
-  bySubject = bySubject[, c(2,1,3:ncol(bySubject))] # Swaps first two columns to match byActivity
-  finalSet <- rbind(byActivity,bySubject)  #Binds the two sets together
+  finalSet <- finalData %>% group_by(subject, activity) %>% summarise_each(funs(mean))
   write.table(finalSet, file="tidydata.txt", sep=" ")
-  write.csv(finalSet, file="tidydata.csv", row.names=FALSE)
-  cat("Done! See tidydata.txt or tidydata.csv in your working directory for your output file.")
+  cat("Done! See tidydata.txt in your working directory for your output file.")
 }
