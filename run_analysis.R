@@ -74,6 +74,6 @@ run_analysis <- function() {
   cat("Creating final data frame...", "\n")
   finalData <- slimData
   finalSet <- finalData %>% group_by(subject, activity) %>% summarise_each(funs(mean))
-  write.table(finalSet, file="tidydata.txt", sep=" ")
+  write.table(finalSet, file="tidydata.txt", sep=" ", row.names = FALSE)
   cat("Done! See tidydata.txt in your working directory for your output file.")
 }
